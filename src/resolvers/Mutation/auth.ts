@@ -6,10 +6,19 @@ import JWT from "jsonwebtoken";
 import "dotenv/config";
 
 interface SignupArgs {
-  email: string;
+  credentials: {
+    email: string;
+    password: string;
+  };
   name: string;
-  password: string;
   bio: string;
+}
+
+interface SigninArgs {
+  credentials: {
+    email: string;
+    password: string;
+  };
 }
 
 interface UserPayload {
@@ -20,9 +29,10 @@ interface UserPayload {
 export const authResolvers = {
   signup: async (
     _: any,
-    { email, name, password, bio }: SignupArgs,
+    { credentials, name, bio }: SignupArgs,
     { prisma }: Context
   ): Promise<UserPayload> => {
+    const { email, password } = credentials;
     const isEmail = validator.isEmail(email);
     if (!isEmail) {
       return {
@@ -65,18 +75,57 @@ export const authResolvers = {
       },
     });
 
-    const token = await JWT.sign(
-      {
-        userId: user.id,
-        email: user.email,
+    return {
+      userErrors: [],
+      token: JWT.sign(
+        {
+          userId: user.id,
+          email: user.email,
+        },
+        process.env.JWT_SIGNATURE as string,
+        { expiresIn: 3600000 }
+      ),
+    };
+  },
+  signin: async (
+    _: any,
+    { credentials }: SigninArgs,
+    { prisma }: Context
+  ): Promise<UserPayload> => {
+    const { email, password } = credentials;
+
+    const user = await prisma.user.findUnique({
+      where: {
+        email,
       },
-      process.env.JWT_SIGNATURE as string,
-      { expiresIn: 3600000 }
-    );
+    });
+
+    if (!user) {
+      return {
+        userErrors: [{ message: "Invalid credentials" }],
+        token: null,
+      };
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+
+    if (!isMatch) {
+      return {
+        userErrors: [{ message: "Invalid credentials" }],
+        token: null,
+      };
+    }
 
     return {
       userErrors: [],
-      token,
+      token: JWT.sign(
+        {
+          userId: user.id,
+          email: user.email,
+        },
+        process.env.JWT_SIGNATURE as string,
+        { expiresIn: 3600000 }
+      ),
     };
   },
 };
