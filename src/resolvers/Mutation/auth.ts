@@ -121,7 +121,6 @@ export const authResolvers = {
       token: JWT.sign(
         {
           userId: user.id,
-          email: user.email,
         },
         process.env.JWT_SIGNATURE as string,
         { expiresIn: 3600000 }
