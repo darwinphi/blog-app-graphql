@@ -57,6 +57,14 @@ export const authResolvers = {
       },
     });
 
+    await prisma.profile.create({
+      data: {
+        bio,
+        userId: user.id,
+        updatedAt: new Date(),
+      },
+    });
+
     const token = await JWT.sign(
       {
         userId: user.id,
