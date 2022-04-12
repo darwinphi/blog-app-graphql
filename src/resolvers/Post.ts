@@ -1,4 +1,5 @@
 import { Context } from "../index";
+import { userLoader } from "../loader/userLoader";
 
 interface PostParentType {
   authorId: number;
@@ -6,10 +7,6 @@ interface PostParentType {
 
 export const Post = {
   user: (parent: PostParentType, __: any, { prisma }: Context) => {
-    return prisma.user.findUnique({
-      where: {
-        id: parent.authorId,
-      },
-    });
+    return userLoader.load(parent.authorId);
   },
 };
