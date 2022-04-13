@@ -16,14 +16,14 @@ const SIGN_IN = gql`
 `;
 
 export default function Signin() {
-  const [signup, { data, loading }] = useMutation(SIGN_IN);
+  const [signin, { data, loading }] = useMutation(SIGN_IN);
   console.log(data);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleClick = () => {
-    signup({
+    signin({
       variables: {
         email,
         password,
