@@ -2,14 +2,47 @@ import React, { useState, useEffect } from "react";
 
 import { Form } from "react-bootstrap";
 import Button from "@restart/ui/esm/Button";
+import { gql, useMutation } from "@apollo/client";
+
+const SIGN_IN = gql`
+  mutation Signup($email: String!, $password: String!) {
+    signin(credentials: { email: $email, password: $password }) {
+      userErrors {
+        message
+      }
+      token
+    }
+  }
+`;
 
 export default function Signin() {
+  const [signup, { data, loading }] = useMutation(SIGN_IN);
+  console.log(data);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  const handleClick = () => {};
+  const handleClick = () => {
+    signup({
+      variables: {
+        email,
+        password,
+      },
+    });
+  };
 
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (data) {
+      if (data.signin.userErrors.length) {
+        setError(data.signin.userErrors[0].message);
+      }
+      if (data.signin.token) {
+        localStorage.setItem("token", data.signin.token);
+      }
+    }
+  }, [data]);
 
   return (
     <div>
